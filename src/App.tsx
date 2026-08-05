@@ -1,0 +1,347 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { BrandMark } from "./components/Brand";
+import { EvidenceDrawer } from "./components/EvidenceDrawer";
+import { ProofPath } from "./components/ProofPath";
+import {
+  FIXTURES,
+  loadAllScenarios,
+  type ScenarioId,
+  type ScenarioView,
+  shortHex,
+  verifyAttestation,
+} from "./engine";
+
+const VERIFY_STEPS = [
+  "Canonicalizing evidence",
+  "Recomputing SHA-256",
+  "Comparing fixture digest",
+  "Proof verified",
+];
+
+type VerifyState = { step: number; done: boolean; ok: boolean | null; at: string | null };
+
+const IDLE: VerifyState = { step: 0, done: false, ok: null, at: null };
+
+export function App() {
+  const [scenarios, setScenarios] = useState<ScenarioView[] | null>(null);
+  const [activeId, setActiveId] = useState<ScenarioId>("approved-with-warnings");
+  const [revealed, setRevealed] = useState(0);
+  const [verify, setVerify] = useState<VerifyState>(IDLE);
+  const [drawer, setDrawer] = useState(false);
+  const timers = useRef<number[]>([]);
+
+  useEffect(() => {
+    void loadAllScenarios().then(setScenarios);
+  }, []);
+
+  const view = scenarios?.find((entry) => entry.id === activeId) ?? null;
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((id) => window.clearTimeout(id));
+    timers.current = [];
+  }, []);
+
+  /** Révèle les nœuds un à un. N'invente aucun état : il déroule `view.path`. */
+  const replay = useCallback(
+    (nodeCount: number) => {
+      clearTimers();
+      setRevealed(0);
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      if (reduced) {
+        setRevealed(nodeCount);
+        return;
+      }
+      for (let index = 1; index <= nodeCount; index += 1) {
+        timers.current.push(
+          window.setTimeout(() => setRevealed(index), index * 210),
+        );
+      }
+    },
+    [clearTimers],
+  );
+
+  useEffect(() => {
+    if (!view) return;
+    replay(view.path.length);
+    setVerify(IDLE);
+    return clearTimers;
+  }, [view, replay, clearTimers]);
+
+  async function runVerify() {
+    if (!view) return;
+    setVerify({ step: 1, done: false, ok: null, at: null });
+    await new Promise((resolve) => window.setTimeout(resolve, 220));
+    setVerify((state) => ({ ...state, step: 2 }));
+
+    const outcome = await verifyAttestation(FIXTURES[view.id], view.attestation);
+    await new Promise((resolve) => window.setTimeout(resolve, 220));
+    setVerify((state) => ({ ...state, step: 3 }));
+    await new Promise((resolve) => window.setTimeout(resolve, 180));
+
+    setVerify({
+      step: 4,
+      done: true,
+      ok: outcome.ok,
+      at: new Date().toLocaleTimeString(),
+    });
+  }
+
+  if (!view) {
+    return (
+      <div className="shell">
+        <p className="mono" style={{ color: "var(--dim)" }}>
+          Loading captured evidence…
+        </p>
+      </div>
+    );
+  }
+
+  const tone = view.executed ? "ok" : "stop";
+  const { fixture, attestation, policy } = view;
+
+  return (
+    <div className="shell">
+      <header className="hdr">
+        <div className="brand">
+          <BrandMark />
+          <div>
+            <div className="brand-name">ProofGate</div>
+            <div className="brand-sub">On-chain verification for KeeperHub agents</div>
+          </div>
+        </div>
+        <span className="chip">
+          <span className="dot" />
+          Sepolia
+        </span>
+        <span className="chip">Captured replay</span>
+        <span className="chip">No live RPC</span>
+        <span className="spacer" />
+        <button type="button" className="btn btn-primary" onClick={() => void runVerify()}>
+          Verify proof
+        </button>
+        <button type="button" className="btn" onClick={() => replay(view.path.length)}>
+          Replay
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={() => setDrawer(true)}>
+          Raw evidence
+        </button>
+      </header>
+
+      <div className="scen" role="tablist" aria-label="Scenario">
+        {scenarios!.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            className="scen-btn"
+            data-tone={entry.executed ? "ok" : "stop"}
+            aria-selected={entry.id === activeId}
+            onClick={() => setActiveId(entry.id)}
+          >
+            <span className="k">{entry.executed ? "Authorized" : "Blocked"}</span>
+            <span className="v">
+              {entry.fixture.intent.amountDisplay} {entry.fixture.token.symbol} ·{" "}
+              {entry.executed ? "executed" : "counterfactual replay"}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid">
+        <div className="col">
+          <section className="panel g-mission">
+            <p className="panel-title">Mission</p>
+            <div className="mission">
+              <div>
+                <div className="k">Agent intent</div>
+                <div className="v">Transfer</div>
+              </div>
+              <div>
+                <div className="k">Amount</div>
+                <div className="v">
+                  {fixture.intent.amountDisplay} {fixture.token.symbol}
+                </div>
+              </div>
+              <div>
+                <div className="k">Recipient</div>
+                <div className="v">{shortHex(fixture.intent.recipient, 8, 6)}</div>
+              </div>
+              <div>
+                <div className="k">Network</div>
+                <div className="v">Sepolia</div>
+              </div>
+              <div>
+                <div className="k">Block</div>
+                <div className="v">{fixture.referenceBlock.number}</div>
+              </div>
+              <div>
+                <div className="k">Status</div>
+                <div className="v">{view.executed ? "Captured" : "Replayed"}</div>
+              </div>
+            </div>
+          </section>
+
+          <section className="panel g-path">
+            <p className="panel-title">Execution path</p>
+            <ProofPath nodes={view.path} revealed={revealed} />
+            <p className="path-note" data-testid="path-note">
+              {view.executed ? (
+                <>
+                  <strong>Executed on-chain</strong> — provider simulation was wrong.
+                </>
+              ) : (
+                <>
+                  <strong>Blocked before broadcast</strong> — allowance exceeded. Proven through a
+                  historical <code>eth_call</code> replay. No transaction was broadcast.
+                </>
+              )}
+            </p>
+          </section>
+
+          <section className="panel g-claims">
+            <p className="panel-title">
+              {view.claims.leftTitle} vs {view.claims.rightTitle}
+            </p>
+            <table className="cmp">
+              <thead>
+                <tr>
+                  <th style={{ width: "44%" }}>{view.claims.leftTitle}</th>
+                  <th>{view.claims.rightTitle}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {view.claims.rows.map((row) => (
+                  <tr key={row.claim}>
+                    <td className="claim">{row.claim}</td>
+                    <td className="reality">{row.reality}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <div className="col">
+          <section className="verdict g-verdict" data-tone={tone} data-testid="verdict">
+            <h2 data-testid="verdict-headline">{view.headline.toUpperCase()}</h2>
+            <div className="sub" data-testid="verdict-subline">
+              {view.subline}
+            </div>
+            <div className="enum">
+              {attestation.verdict} · release {attestation.releaseDecision} · policy{" "}
+              {attestation.policyDecision}
+            </div>
+
+            <dl className="kv">
+              {view.executed ? (
+                <>
+                  <dt>Provider prediction</dt>
+                  <dd className="warn">Predicted failure</dd>
+                  <dt>On-chain reality</dt>
+                  <dd className="ok">Transaction succeeded</dd>
+                  <dt>Policy</dt>
+                  <dd>{policy.consumedDisplay ?? "—"} of {policy.capDisplay} consumed</dd>
+                  <dt>Remaining</dt>
+                  <dd>{policy.remainingDisplay ?? "—"}</dd>
+                  <dt>Main warning</dt>
+                  <dd className="warn">Simulation false negative</dd>
+                </>
+              ) : (
+                <>
+                  <dt>Requested</dt>
+                  <dd className="stop">
+                    {fixture.intent.amountDisplay} {fixture.token.symbol}
+                  </dd>
+                  <dt>Available</dt>
+                  <dd>{policy.remainingDisplay ?? "—"}</dd>
+                  <dt>Transaction hash</dt>
+                  <dd>None — expected</dd>
+                  <dt>Proof</dt>
+                  <dd>Historical eth_call</dd>
+                  <dt>Revert</dt>
+                  <dd className="stop">{fixture.decoded.revert?.statusName ?? "—"}</dd>
+                  <dt>Block</dt>
+                  <dd>{fixture.referenceBlock.number}</dd>
+                </>
+              )}
+              <dt>Digest</dt>
+              <dd data-testid="digest-short">{shortHex(attestation.attestationHash, 10, 8)}</dd>
+            </dl>
+          </section>
+
+          <section className="panel g-verify">
+            <p className="panel-title">Proof verification</p>
+            <ol className="verify-steps" data-testid="verify-steps">
+              {VERIFY_STEPS.map((label, index) => {
+                const isLast = index === VERIFY_STEPS.length - 1;
+                const failed = isLast && verify.done && verify.ok === false;
+                return (
+                  <li
+                    key={label}
+                    data-done={verify.step > index && !failed ? "1" : "0"}
+                    data-fail={failed ? "1" : "0"}
+                  >
+                    {failed ? "Proof verification FAILED" : label}
+                  </li>
+                );
+              })}
+            </ol>
+
+            {verify.done ? (
+              <>
+                <div className="digest" data-testid="digest-full">
+                  {attestation.attestationHash}
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => void navigator.clipboard?.writeText(attestation.attestationHash)}
+                  >
+                    Copy digest
+                  </button>
+                  <span
+                    className="chip"
+                    data-testid="verify-status"
+                    style={{ color: verify.ok ? "var(--ok)" : "var(--stop)" }}
+                  >
+                    {verify.ok ? "Verified locally in your browser" : "Verification failed"}
+                  </span>
+                </div>
+                <div className="digest" data-testid="verify-scope">
+                  Integrity of the captured evidence verified locally. No live RPC call.
+                </div>
+                <div className="digest">Local verification time {verify.at} (not on-chain data)</div>
+              </>
+            ) : (
+              <p style={{ color: "var(--dim)", fontSize: 12, margin: "8px 0 0" }}>
+                Recomputes the captured evidence digest with Web Crypto, in this browser. No live
+                RPC call.
+              </p>
+            )}
+          </section>
+
+          <section className="panel g-reasons">
+            <p className="panel-title">Reason codes</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {attestation.reasonCodes.map((code) => (
+                <span className="badge" key={code}>
+                  {code}
+                </span>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <footer className="foot">
+        <span>Built for KeeperHub · Verification engine by ArcadeOps</span>
+        <span>Evidence captured at block {fixture.referenceBlock.number}</span>
+        <span>Replay works fully offline</span>
+      </footer>
+
+      {drawer ? <EvidenceDrawer view={view} onClose={() => setDrawer(false)} /> : null}
+    </div>
+  );
+}

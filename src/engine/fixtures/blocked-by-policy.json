@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "arcadeops.onchain-evidence.v1",
+  "scenarioId": "blocked-by-policy",
+  "title": "Transfert de 5 USDC refusé par l'allocation Zodiac Roles",
+  "chainId": 11155111,
+  "referenceBlock": {
+    "number": 11418272,
+    "tag": "0xae3aa0"
+  },
+  "addresses": {
+    "safe": "0xf0Fe18E660A661EE17E6d1cA5F12243E23c544d1",
+    "rolesModifier": "0x21E92b6825b6f8d31547C650974477938bC1acc8",
+    "delegateEoa": "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58",
+    "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "recipient": "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58"
+  },
+  "token": {
+    "address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "symbol": "USDC",
+    "decimals": 6
+  },
+  "intent": {
+    "action": "erc20_transfer",
+    "sender": "0xf0Fe18E660A661EE17E6d1cA5F12243E23c544d1",
+    "recipient": "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58",
+    "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "amountRaw": "5000000",
+    "amountDisplay": "5",
+    "broadcastExpected": false
+  },
+  "executionPath": [
+    "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58",
+    "0x21E92b6825b6f8d31547C650974477938bC1acc8",
+    "0xf0Fe18E660A661EE17E6d1cA5F12243E23c544d1",
+    "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58"
+  ],
+  "provider": {
+    "_note": "Aucun appel fournisseur n'a été émis pour le run B : l'action est empêchée avant diffusion. La preuve est un eth_call historique reconstruit, pas une réponse fournisseur.",
+    "tool": null,
+    "requestArguments": null,
+    "executeResponse": null,
+    "statusResponse": null,
+    "simulationResponse": null
+  },
+  "rpc": {
+    "transaction": null,
+    "receipt": null,
+    "code": null,
+    "ethCall": {
+      "request": {
+        "from": "0x8FF41A30af4458E3C14C8843BDDcc37B7992ED58",
+        "to": "0x21E92b6825b6f8d31547C650974477938bC1acc8",
+        "data": "0xc6fe87470000000000000000000000001c7d4b196cb0c7b01d743fbc6116a902379c7238000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000011bd50d6cff2880f8ee05f1240131ccf849f18fe234d3da964282c27a9c2814200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000008ff41a30af4458e3c14c8843bddcc37b7992ed5800000000000000000000000000000000000000000000000000000000004c4b4000000000000000000000000000000000000000000000000000000000"
+      },
+      "blockTag": "0xae3aa0",
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "error": {
+          "code": 3,
+          "message": "execution reverted",
+          "data": "0xd0a9bf58000000000000000000000000000000000000000000000000000000000000001115b2c3e3804313b44cd4f64089c49f97cf849733ef4195d90b8bdf63ea73ad9d"
+        }
+      }
+    }
+  },
+  "decoded": {
+    "events": [],
+    "envelope": {
+      "selector": "0xc6fe8747",
+      "functionSignature": "execTransactionWithRole(address,uint256,bytes,uint8,bytes32,bool)",
+      "roleKey": "0x11bd50d6cff2880f8ee05f1240131ccf849f18fe234d3da964282c27a9c28142",
+      "innerCalldata": "0xa9059cbb0000000000000000000000008ff41a30af4458e3c14c8843bddcc37b7992ed5800000000000000000000000000000000000000000000000000000000004c4b40",
+      "outerCalldata": "0xc6fe87470000000000000000000000001c7d4b196cb0c7b01d743fbc6116a902379c7238000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000011bd50d6cff2880f8ee05f1240131ccf849f18fe234d3da964282c27a9c2814200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000008ff41a30af4458e3c14c8843bddcc37b7992ed5800000000000000000000000000000000000000000000000000000000004c4b4000000000000000000000000000000000000000000000000000000000",
+      "reencodedMatchesOnChainInput": null
+    },
+    "revert": {
+      "selector": "0xd0a9bf58",
+      "errorSignature": "ConditionViolation(uint8,bytes32)",
+      "statusIndex": 17,
+      "statusName": "AllowanceExceeded",
+      "info": "0x15b2c3e3804313b44cd4f64089c49f97cf849733ef4195d90b8bdf63ea73ad9d",
+      "statusEnumProvenance": "gnosisguild/zodiac-modifier-roles :: packages/evm/contracts/PermissionChecker.sol :: enum Status"
+    },
+    "boundaryProbes": [
+      {
+        "amountRaw": "4000000",
+        "amountDisplay": "4",
+        "reverted": false,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "revertData": null
+      },
+      {
+        "amountRaw": "1000000",
+        "amountDisplay": "1",
+        "reverted": false,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "revertData": null
+      }
+    ]
+  },
+  "provenance": [
+    {
+      "field": "rpc.ethCall",
+      "source": "https://ethereum-sepolia-rpc.publicnode.com",
+      "method": "eth_call",
+      "blockTag": "0xae3aa0",
+      "note": "état post-run-A : eth_call à un numéro de bloc s'exécute sur l'état après ce bloc"
+    },
+    {
+      "field": "decoded.revert",
+      "source": "local",
+      "method": "décodage du selector ConditionViolation(uint8,bytes32)"
+    },
+    {
+      "field": "decoded.revert.statusName",
+      "source": "gnosisguild/zodiac-modifier-roles",
+      "method": "packages/evm/contracts/PermissionChecker.sol :: enum Status"
+    },
+    {
+      "field": "decoded.boundaryProbes",
+      "source": "https://ethereum-sepolia-rpc.publicnode.com",
+      "method": "eth_call",
+      "blockTag": "0xae3aa0"
+    },
+    {
+      "field": "provider",
+      "source": "none",
+      "method": "aucun appel fournisseur — action empêchée avant diffusion"
+    }
+  ],
+  "capturedAt": "1970-01-01T00:00:00.000Z",
+  "evidenceDigest": "cd9eff912b068469e5b562bba526d02a3ee7e27d1e61a9b16b962c6ddb2d3d59"
+}
