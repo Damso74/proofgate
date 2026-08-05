@@ -92,10 +92,14 @@ The provider simulator had predicted failure — a **simulation false negative**
 a direct transfer from the delegate EOA rather than the Safe execution path, and **the EOA
 held 0 USDC at that moment**.
 
-That balance is provable without an archive node: `eth_getLogs` over the USDC contract shows
-exactly one Transfer touching the delegate EOA up to and including block 11418272 — the 1
-USDC of this very transaction. No prior incoming or outgoing transfer, so the balance before
-it was zero.
+Supporting evidence, with its scope stated: `eth_getLogs` over the USDC contract across the
+**300 000 blocks preceding the incident** (`11118272 → 11418272`) shows exactly one Transfer
+touching the delegate EOA — the 1 USDC of this very transaction — and no outgoing transfer.
+Within that window the prior balance was therefore zero. This is not a full-history proof:
+public Sepolia nodes no longer serve state at that height, so the token's deployment block
+could not be located. The complete scan lives in
+[`scripts/prove-historical-balance.mjs`](https://github.com/Damso74/keeper-agent/blob/main/scripts/prove-historical-balance.mjs)
+and closes the gap when pointed at an archive node.
 
 The EOA's balance has changed since, so the divergence is threshold-based rather than
 absolute: the simulator and the chain disagree whenever the amount exceeds the EOA's own
