@@ -89,15 +89,14 @@ Real execution on Ethereum Sepolia, **2026-08-04**. 1 USDC moved out of the Safe
 succeeded.
 
 The provider simulator had predicted failure — a **simulation false negative**: it modelled
-a direct transfer from the delegate EOA rather than the Safe execution path, and **the EOA
-held 0 USDC at that moment**.
+a direct transfer from the delegate EOA rather than the Safe execution path.
 
-Supporting evidence, with its scope stated: `eth_getLogs` over the USDC contract across the
-**300 000 blocks preceding the incident** (`11118272 → 11418272`) shows exactly one Transfer
-touching the delegate EOA — the 1 USDC of this very transaction — and no outgoing transfer.
-Within that window the prior balance was therefore zero. This is not a full-history proof:
-public Sepolia nodes no longer serve state at that height, so the token's deployment block
-could not be located. The complete scan lives in
+The provider simulator reported insufficient delegate-EOA balance for the 1 USDC
+direct-transfer path. A 300,000-block Transfer-log scan found no earlier balance-affecting
+activity within that window, but the opening balance of the window remains unknown. The
+exact historical EOA balance is therefore not independently established.
+
+The complete scan lives in
 [`scripts/prove-historical-balance.mjs`](https://github.com/Damso74/keeper-agent/blob/main/scripts/prove-historical-balance.mjs)
 and closes the gap when pointed at an archive node.
 
@@ -218,23 +217,12 @@ No API is exposed, no secret is bundled, and no request leaves the browser.
 
 ---
 
-## Video script — 2:30
+## Video script
 
-**0:00–0:20 · The gap**
-“Agent platforms can report success or failure from incomplete signals. ProofGate
-independently checks the chain.”
+The submission's execution proof is the **autonomous agent run of 2026-08-05** — 0.1 USDC,
+execution `no623hdfsrun2vzv3b25r`, transaction
+[`0xe7e67b3a…`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062),
+reconciled through the KeeperHub execution status, the audit command and independent RPC
+evidence. The 2026-08-04 incident replayed by this app appears only as a secondary case.
 
-**0:20–1:10 · Scenario A**
-Provider predicted failure. KeeperHub execution succeeded. Safe transfer confirmed on-chain.
-Allowance consumption proven by `ConsumeAllowance` — 1 of 5 USDC, 4 remaining. A warning is
-generated: simulation false negative. Verdict: executed on-chain, verified with warnings.
-
-**1:10–1:55 · Scenario B**
-Request 5 USDC. Only 4 remaining. The complete Roles envelope is replayed at the reference
-block. `AllowanceExceeded`, tied to the same allowance key. No broadcast expected, none
-happened. Verdict: blocked before broadcast.
-
-**1:55–2:30 · The proof**
-Click Verify proof. Canonical JSON, SHA-256 recomputed with Web Crypto, compared to the
-stored digest — locally, in the browser, with no network call. Same evidence, same hash,
-anywhere. KeeperHub executes; ProofGate proves.
+Full timeline and shooting notes: [docs/VIDEO_SCRIPT.md](./docs/VIDEO_SCRIPT.md).
