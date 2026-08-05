@@ -20,6 +20,22 @@ response never disclosed how much policy allowance the action consumed, and repo
 
 Nothing was stolen. That is the problem: the operator had no way to know.
 
+## The two executions, kept distinct
+
+ProofGate replays **one captured reliability incident**. A separate autonomous agent —
+[keeper-agent](https://github.com/Damso74/keeper-agent) — later executed on its own. They
+are different runs and must not be conflated:
+
+| | Captured reliability incident (this app's fixture) | Autonomous agent run |
+| --- | --- | --- |
+| Date | 2026-08-04 | 2026-08-05 |
+| Amount | 1 USDC | 0.1 USDC |
+| KeeperHub execution id | `1w6mru2gemgtq7wsruvaj` | `no623hdfsrun2vzv3b25r` |
+| Transaction | [`0x0801289e…`](https://sepolia.etherscan.io/tx/0x0801289edfdcfd919b64b1f7e267d935674d09fa09de7a9670b8aa169bcb605e) | [`0xe7e67b3a…`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062) |
+| Triggered by | a human operator | the agent's own decision rule |
+
+Scenarios A and B below both derive from the **2026-08-04** incident.
+
 ProofGate replays the action against the chain and produces a hash-verifiable verdict.
 Only on-chain evidence is authoritative. Provider reports can raise warnings, never
 validate. Missing evidence is never a pass.
@@ -68,11 +84,22 @@ suite.
 
 ### A — Authorized (`VERIFIED_WITH_WARNINGS`)
 
-Real execution on Ethereum Sepolia. 1 USDC moved out of the Safe through
+Real execution on Ethereum Sepolia, **2026-08-04**. 1 USDC moved out of the Safe through
 `execTransactionWithRole`. Path: `KeeperHub → Roles Modifier → Safe → USDC`. Receipt
-succeeded. The provider simulator had predicted failure — a **simulation false negative**:
-it modelled a direct transfer from the delegate EOA, which holds no USDC, not the Safe
-execution path.
+succeeded.
+
+The provider simulator had predicted failure — a **simulation false negative**: it modelled
+a direct transfer from the delegate EOA rather than the Safe execution path, and **the EOA
+held 0 USDC at that moment**.
+
+That balance is provable without an archive node: `eth_getLogs` over the USDC contract shows
+exactly one Transfer touching the delegate EOA up to and including block 11418272 — the 1
+USDC of this very transaction. No prior incoming or outgoing transfer, so the balance before
+it was zero.
+
+The EOA's balance has changed since, so the divergence is threshold-based rather than
+absolute: the simulator and the chain disagree whenever the amount exceeds the EOA's own
+balance but stays within the Safe's policy allowance.
 
 ### B — Blocked (`BLOCKED_BY_POLICY`)
 
