@@ -79,7 +79,7 @@ function buildPath(fixture: EvidenceFixture, executed: boolean): PathNode[] {
     {
       key: "safe",
       label: "Safe",
-      sublabel: executed ? "Transfer emitted" : "Not executed",
+      sublabel: executed ? "Module execution succeeded" : "Not executed",
       reached: executed,
       halted: false,
       tone: executed ? "ok" : "idle",
@@ -87,7 +87,7 @@ function buildPath(fixture: EvidenceFixture, executed: boolean): PathNode[] {
     {
       key: "token",
       label: token,
-      sublabel: executed ? "Receipt confirmed" : "Not executed",
+      sublabel: executed ? "Transfer event emitted" : "Not executed",
       reached: executed,
       halted: false,
       tone: executed ? "ok" : "idle",
@@ -182,8 +182,10 @@ export async function loadScenario(id: ScenarioId): Promise<ScenarioView> {
     policy,
     path: buildPath(fixture, executed),
     claims: buildClaims(fixture, policy, executed),
-    headline: executed ? "Executed on-chain" : "Blocked by policy",
-    subline: executed ? "Verified with warnings" : "Would be rejected before broadcast",
+    headline: executed ? "Onchain success verified" : "Blocked by policy",
+    subline: executed
+      ? "Provider simulation discrepancy detected"
+      : "Would be rejected before broadcast",
     executed,
     txHash,
     explorerTxUrl: txHash ? `https://sepolia.etherscan.io/tx/${txHash}` : null,
