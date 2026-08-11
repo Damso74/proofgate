@@ -23,6 +23,11 @@ type VerifyState = { step: number; done: boolean; ok: boolean | null; at: string
 
 const IDLE: VerifyState = { step: 0, done: false, ok: null, at: null };
 
+const PRIMARY_TX_URL =
+  "https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062";
+const AGENT_CODE_URL = "https://github.com/Damso74/keeper-agent";
+const EVIDENCE_URL = "https://github.com/Damso74/keeper-agent/blob/main/EVIDENCE.md";
+
 export function App() {
   const [scenarios, setScenarios] = useState<ScenarioView[] | null>(null);
   const [activeId, setActiveId] = useState<ScenarioId>("approved-with-warnings");
@@ -107,28 +112,128 @@ export function App() {
           <BrandMark />
           <div>
             <div className="brand-name">ProofGate</div>
-            <div className="brand-sub">On-chain verification for KeeperHub agents</div>
+            <div className="brand-sub">Evidence console for Treasury Drip Agent</div>
           </div>
         </div>
         <span className="chip">
           <span className="dot" />
           Sepolia
         </span>
-        <span className="chip">Captured replay</span>
-        <span className="chip">No live RPC</span>
         <span className="spacer" />
-        <button type="button" className="btn btn-primary" onClick={() => void runVerify()}>
-          Verify proof
-        </button>
-        <button type="button" className="btn" onClick={() => replay(view.path.length)}>
-          Replay
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={() => setDrawer(true)}>
-          Raw evidence
-        </button>
+        <span className="header-context">KeeperHub · Safe · USDC</span>
       </header>
 
-      <div className="scen" role="tablist" aria-label="Scenario">
+      <main>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <div className="eyebrow">
+              <span className="eyebrow-mark" />
+              Treasury Drip Agent · primary hackathon run
+            </div>
+            <h1 id="hero-title">
+              An onchain agent that can <span>prove what it did.</span>
+            </h1>
+            <p className="hero-lede">
+              The operator initiated the run. The agent independently observed chain state,
+              decided, executed exactly once through KeeperHub, and verified the outcome through
+              independent RPC evidence.
+            </p>
+            <div className="hero-actions">
+              <a
+                className="btn btn-primary btn-large"
+                href={PRIMARY_TX_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View 0.1 USDC onchain <span aria-hidden="true">↗</span>
+              </a>
+              <a
+                className="btn btn-large"
+                href={AGENT_CODE_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Explore agent code <span aria-hidden="true">↗</span>
+              </a>
+              <a
+                className="btn btn-ghost btn-large"
+                href={EVIDENCE_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Read evidence
+              </a>
+            </div>
+          </div>
+
+          <aside className="run-card" data-testid="primary-run" aria-label="Primary run proof">
+            <div className="run-card-head">
+              <span className="run-label">Primary execution</span>
+              <span className="run-status"><span /> Onchain success</span>
+            </div>
+            <div className="run-amount">
+              <strong>0.1</strong>
+              <span>USDC</span>
+            </div>
+            <div className="run-metrics">
+              <div>
+                <strong>1</strong>
+                <span>KeeperHub execute</span>
+              </div>
+              <div>
+                <strong>0</strong>
+                <span>Retries</span>
+              </div>
+              <div>
+                <strong>RPC</strong>
+                <span>Independent verification</span>
+              </div>
+            </div>
+            <div className="run-route" aria-label="Execution route">
+              <span>KeeperHub</span><i>→</i><span>Roles</span><i>→</i><span>Safe</span><i>→</i><span>USDC</span>
+            </div>
+            <div className="run-id">
+              <span>execution</span>
+              <code>no623hdfsrun2vzv3b25r</code>
+            </div>
+          </aside>
+        </section>
+
+        <section className="console-intro" aria-labelledby="console-title">
+          <div>
+            <p className="console-kicker">Evidence console · separate reliability incident</p>
+            <h2 id="console-title">ProofGate captured replay</h2>
+            <p className="console-note" data-testid="console-note">
+              The console below replays a separate 1 USDC run captured on 2026-08-04. It makes no
+              live RPC call; <strong>Verify proof</strong> recomputes the captured evidence digest
+              locally in your browser.
+            </p>
+          </div>
+          <div className="console-actions">
+            <button type="button" className="btn btn-primary" onClick={() => void runVerify()}>
+              Verify proof
+            </button>
+            <button type="button" className="btn" onClick={() => replay(view.path.length)}>
+              Replay
+            </button>
+            {view.explorerTxUrl ? (
+              <a
+                className="btn"
+                data-testid="replay-tx-link"
+                href={view.explorerTxUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View replay on Etherscan <span aria-hidden="true">↗</span>
+              </a>
+            ) : null}
+            <button type="button" className="btn btn-ghost" onClick={() => setDrawer(true)}>
+              Raw evidence
+            </button>
+          </div>
+        </section>
+
+        <div className="scen" role="tablist" aria-label="Scenario">
         {scenarios!.map((entry) => (
           <button
             key={entry.id}
@@ -146,9 +251,9 @@ export function App() {
             </span>
           </button>
         ))}
-      </div>
+        </div>
 
-      <div className="grid">
+        <div className="grid">
         <div className="col">
           <section className="panel g-mission">
             <p className="panel-title">Mission</p>
@@ -333,7 +438,8 @@ export function App() {
             </div>
           </section>
         </div>
-      </div>
+        </div>
+      </main>
 
       <footer className="foot">
         <span>Built for KeeperHub · Verification engine by ArcadeOps</span>
