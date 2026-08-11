@@ -1,13 +1,14 @@
 # Video script — 2:30
 
-The submission's execution proof is the **autonomous agent run**. The 2026-08-04 reliability
-incident is a secondary case, shown only after the execution has been established.
+The submission's execution proof is the **operator-initiated Treasury Drip Agent run**. After
+initiation, the agent independently observed, decided, executed and verified. The 2026-08-04
+reliability incident is a secondary case, shown only after the primary execution is established.
 
 ## Primary subject
 
 | | |
 | --- | --- |
-| Run | **Autonomous Agent Run — 2026-08-05** |
+| Run | **Operator-initiated Treasury Drip Agent run — 2026-08-05** |
 | Amount | **0.1 USDC** |
 | KeeperHub execution id | **`no623hdfsrun2vzv3b25r`** |
 | Transaction | [`0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062) |
@@ -32,8 +33,8 @@ npm run agent -- --execute
 
 Then the execution through KeeperHub, and the transaction on Etherscan.
 
-> "No human chose the moment or the amount. The agent observed, decided, and executed
-> through KeeperHub."
+> "The operator initiated the run. The agent independently observed chain state, decided,
+> executed exactly once through KeeperHub, and verified the outcome."
 
 ### 0:50–1:20 — KeeperHub execution status
 
@@ -53,8 +54,8 @@ npm --silent run audit -- no623hdfsrun2vzv3b25r | jq
 ```
 
 Walk through the output: the KeeperHub audit record, the Analytics REST coverage, then the
-RPC evidence read independently — `Transfer` emitted **by the Safe**,
-`ExecutionFromModuleSuccess`, and `ConsumeAllowance` moving the allowance from 4 to
+RPC evidence read independently — `Transfer` emitted **by the USDC contract** with the Safe in
+the indexed `from` field, `ExecutionFromModuleSuccess`, and `ConsumeAllowance` moving the allowance from 4 to
 3.9 USDC.
 
 Verdict: **`MATCH_WITH_PROVIDER_WARNINGS`**. Every authoritative check agrees with the chain.
@@ -75,8 +76,9 @@ browser, with no network call.
 
 ### 2:20–2:30 — Close
 
-> **KeeperHub executes autonomous actions. ProofGate independently reconciles agent claims,
-> policy state, and captured on-chain evidence before the result is trusted.**
+> **Treasury Drip Agent executes within Safe-scoped authority through KeeperHub, then proves the
+> exact outcome independently. ProofGate makes the separate captured reliability evidence
+> inspectable.**
 
 ## Shooting notes
 
