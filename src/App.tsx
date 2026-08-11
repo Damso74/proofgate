@@ -135,8 +135,8 @@ export function App() {
             </h1>
             <p className="hero-lede">
               The operator initiated the run. The agent independently observed chain state,
-              decided, executed exactly once through KeeperHub, and verified the outcome through
-              independent RPC evidence.
+              decided, ran one read-only KeeperHub preflight, broadcast once, and verified the
+              outcome through independent RPC evidence.
             </p>
             <div className="hero-actions">
               <a
@@ -178,11 +178,11 @@ export function App() {
             <div className="run-metrics">
               <div>
                 <strong>1</strong>
-                <span>KeeperHub execute</span>
+                <span>Broadcast call</span>
               </div>
               <div>
                 <strong>0</strong>
-                <span>Retries</span>
+                <span>Automatic retries</span>
               </div>
               <div>
                 <strong>RPC</strong>

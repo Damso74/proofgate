@@ -54,8 +54,8 @@ test.describe("ProofGate", () => {
     const primaryRun = page.getByTestId("primary-run");
     await expect(primaryRun).toContainText("0.1");
     const primaryMetrics = primaryRun.locator(".run-metrics > div");
-    await expect(primaryMetrics.nth(0)).toContainText(/1\s*KeeperHub execute/);
-    await expect(primaryMetrics.nth(1)).toContainText(/0\s*Retries/);
+    await expect(primaryMetrics.nth(0)).toContainText(/1\s*Broadcast call/);
+    await expect(primaryMetrics.nth(1)).toContainText(/0\s*Automatic retries/);
     await expect(primaryMetrics.nth(2)).toContainText(/RPC\s*Independent verification/);
     await expect(page.getByRole("link", { name: /View 0.1 USDC onchain/ })).toHaveAttribute(
       "href",

@@ -4,9 +4,9 @@
 _Built for KeeperHub · Verification engine by ArcadeOps_
 
 > **Treasury Drip Agent is the primary hackathon product.** The operator initiated its real
-> 0.1 USDC run; the agent then independently observed chain state, decided, executed exactly
-> once through KeeperHub and verified the outcome through independent RPC evidence. ProofGate
-> is the supporting evidence console, not a second execution product.
+> 0.1 USDC run; the agent then independently observed chain state, decided, ran one read-only
+> KeeperHub preflight, broadcast once and verified the outcome through independent RPC evidence.
+> ProofGate is the supporting evidence console, not a second execution product.
 
 **Live: https://proofgate.vercel.app**
 
@@ -15,8 +15,8 @@ Primary execution:
 · [agent code](https://github.com/Damso74/keeper-agent)
 · [evidence](https://github.com/Damso74/keeper-agent/blob/main/EVIDENCE.md)
 
-- **1** KeeperHub execute call
-- **0** retries
+- **1** non-simulated broadcast call, after one read-only preflight
+- **0** automatic retries
 - receipt and logs independently cross-checked by RPC
 
 ---
@@ -136,7 +136,14 @@ Captured once from Ethereum Sepolia by
 only, no broadcast. Each fixture carries a `provenance` array naming the source, method and
 block tag of every field, plus an `evidenceDigest` over its own content.
 
-Fixtures are committed. The app performs **no network call at runtime**.
+Fixtures are committed. The app makes **no background API or RPC call at runtime**;
+external evidence and source links navigate only when the user clicks them.
+
+The fixtures retain `1970-01-01T00:00:00.000Z` in their top-level `capturedAt` field as a
+deterministic reference marker for digest parity; it is **not** presented as the incident
+time. The executed scenario's actual provider capture time remains in its provenance
+(`2026-08-04T15:39:19.492Z`), while the counterfactual is anchored to its historical block
+tag.
 
 ## 6. How the verdict is computed
 
@@ -213,7 +220,8 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d YOUR_DOMAIN
 ```
 
-No API is exposed, no secret is bundled, and no request leaves the browser.
+No API is exposed, no secret is bundled, and no background request leaves the browser.
+External evidence and source links navigate only when clicked.
 
 ## 13. Factual limits
 
