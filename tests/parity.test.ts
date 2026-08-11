@@ -121,6 +121,14 @@ describe("intégrité du produit", () => {
     const approved = await loadScenario("approved-with-warnings");
     expect(approved.path.every((node) => node.reached)).toBe(true);
     expect(approved.path.some((node) => node.halted)).toBe(false);
+    expect(approved.path.find((node) => node.key === "safe")?.sublabel).toBe(
+      "Module execution succeeded",
+    );
+    expect(approved.path.find((node) => node.key === "token")?.sublabel).toBe(
+      "Transfer event emitted",
+    );
+    expect(approved.headline).toBe("Onchain success verified");
+    expect(approved.subline).toBe("Provider simulation discrepancy detected");
 
     const blocked = await loadScenario("blocked-by-policy");
     expect(blocked.path.find((node) => node.key === "policy")?.halted).toBe(true);
