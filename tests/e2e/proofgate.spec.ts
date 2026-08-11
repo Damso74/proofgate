@@ -37,29 +37,64 @@ function collect(page: Page): Collected {
 const tabAuthorized = (page: Page) => page.getByRole("tab", { name: /Authorized/ });
 const tabBlocked = (page: Page) => page.getByRole("tab", { name: /Blocked/ });
 const headline = (page: Page) => page.getByTestId("verdict-headline");
+const PRIMARY_TX =
+  "https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062";
+const REPLAY_TX =
+  "https://sepolia.etherscan.io/tx/0x0801289edfdcfd919b64b1f7e267d935674d09fa09de7a9670b8aa169bcb605e";
 
 test.describe("ProofGate", () => {
   test("raconte les deux scénarios et vérifie la preuve dans le navigateur", async ({ page }) => {
     const collected = collect(page);
     await page.goto("/", { waitUntil: "networkidle" });
 
-    // 1-2. Scénario A affiché initialement, verdict visible.
-    await expect(tabAuthorized(page)).toHaveAttribute("aria-selected", "true");
-    await expect(headline(page)).toHaveText("EXECUTED ON-CHAIN");
-    await expect(page.getByTestId("verdict-subline")).toHaveText("Verified with warnings");
+    // 1. Le produit principal est visible sans confondre son run avec le replay.
+    await expect(
+      page.getByRole("heading", { name: "An onchain agent that can prove what it did." }),
+    ).toBeVisible();
+    const primaryRun = page.getByTestId("primary-run");
+    await expect(primaryRun).toContainText("0.1");
+    const primaryMetrics = primaryRun.locator(".run-metrics > div");
+    await expect(primaryMetrics.nth(0)).toContainText(/1\s*KeeperHub execute/);
+    await expect(primaryMetrics.nth(1)).toContainText(/0\s*Retries/);
+    await expect(primaryMetrics.nth(2)).toContainText(/RPC\s*Independent verification/);
+    await expect(page.getByRole("link", { name: /View 0.1 USDC onchain/ })).toHaveAttribute(
+      "href",
+      PRIMARY_TX,
+    );
+    await expect(page.getByRole("link", { name: /Explore agent code/ })).toHaveAttribute(
+      "href",
+      "https://github.com/Damso74/keeper-agent",
+    );
+    await expect(page.getByRole("link", { name: "Read evidence" })).toHaveAttribute(
+      "href",
+      "https://github.com/Damso74/keeper-agent/blob/main/EVIDENCE.md",
+    );
+    await expect(page.getByTestId("console-note")).toContainText("separate 1 USDC run");
+    await expect(page.getByTestId("console-note")).toContainText("no live RPC call");
 
-    // 3. Le replay A parcourt tous les nœuds attendus.
+    // 2-3. Scénario A affiché initialement, verdict et transaction de replay visibles.
+    await expect(tabAuthorized(page)).toHaveAttribute("aria-selected", "true");
+    await expect(headline(page)).toHaveText("ONCHAIN SUCCESS VERIFIED");
+    await expect(page.getByTestId("verdict-subline")).toHaveText(
+      "Provider simulation discrepancy detected",
+    );
+    await expect(page.getByTestId("replay-tx-link")).toHaveAttribute("href", REPLAY_TX);
+
+    // 4. Le replay A parcourt tous les nœuds attendus et attribue Transfer à USDC.
     for (const key of ["intent", "keeperhub", "policy", "safe", "token", "verdict"]) {
       await expect(page.getByTestId(`node-${key}`)).toHaveAttribute("data-reached", "1");
     }
     await expect(page.getByTestId("node-token")).toHaveAttribute("data-on", "1", { timeout: 10_000 });
+    await expect(page.getByTestId("node-safe")).toContainText("Module execution succeeded");
+    await expect(page.getByTestId("node-token")).toContainText("Transfer event emitted");
 
-    // 4-5. Bascule vers B.
+    // 5-6. Bascule vers B.
     await tabBlocked(page).click();
     await expect(tabBlocked(page)).toHaveAttribute("aria-selected", "true");
     await expect(tabAuthorized(page)).toHaveAttribute("aria-selected", "false");
     await expect(headline(page)).toHaveText("BLOCKED BY POLICY");
     await expect(page.getByTestId("verdict-subline")).toHaveText("Would be rejected before broadcast");
+    await expect(page.getByTestId("replay-tx-link")).toHaveCount(0);
 
     // 6-7. L'animation s'arrête sur Policy ; Safe et USDC restent non exécutés.
     await expect(page.getByTestId("node-policy")).toHaveAttribute("data-halt", "1", {
@@ -84,7 +119,7 @@ test.describe("ProofGate", () => {
 
     // 10. Retour vers A.
     await tabAuthorized(page).click();
-    await expect(headline(page)).toHaveText("EXECUTED ON-CHAIN");
+    await expect(headline(page)).toHaveText("ONCHAIN SUCCESS VERIFIED");
     const digestA = await page.getByTestId("digest-short").textContent();
     expect(digestA).not.toBe(digestB);
 
@@ -118,11 +153,13 @@ test.describe("ProofGate", () => {
     }
   });
 
-  test("le verdict est visible sans défilement", async ({ page }) => {
+  test("la proposition de valeur principale est visible sans défilement", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
-    const verdict = headline(page);
-    await expect(verdict).toBeVisible();
-    const box = await verdict.boundingBox();
+    const heroTitle = page.getByRole("heading", {
+      name: "An onchain agent that can prove what it did.",
+    });
+    await expect(heroTitle).toBeVisible();
+    const box = await heroTitle.boundingBox();
     const viewport = page.viewportSize();
     expect(box).not.toBeNull();
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
