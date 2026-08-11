@@ -1,12 +1,23 @@
-# ProofGate
+# ProofGate — evidence console for Treasury Drip Agent
 
-**On-chain verification for KeeperHub agents.**
+**Safe-scoped agent execution, independently verified onchain.**
 _Built for KeeperHub · Verification engine by ArcadeOps_
 
-> KeeperHub executes autonomous actions. ProofGate independently reconciles agent claims,
-> policy state, and captured on-chain evidence before the result is trusted.
+> **Treasury Drip Agent is the primary hackathon product.** The operator initiated its real
+> 0.1 USDC run; the agent then independently observed chain state, decided, executed exactly
+> once through KeeperHub and verified the outcome through independent RPC evidence. ProofGate
+> is the supporting evidence console, not a second execution product.
 
 **Live: https://proofgate.vercel.app**
+
+Primary execution:
+[`0xe7e67b3a…`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062)
+· [agent code](https://github.com/Damso74/keeper-agent)
+· [evidence](https://github.com/Damso74/keeper-agent/blob/main/EVIDENCE.md)
+
+- **1** KeeperHub execute call
+- **0** retries
+- receipt and logs independently cross-checked by RPC
 
 ---
 
@@ -22,17 +33,19 @@ Nothing was stolen. That is the problem: the operator had no way to know.
 
 ## The two executions, kept distinct
 
-ProofGate replays **one captured reliability incident**. A separate autonomous agent —
-[keeper-agent](https://github.com/Damso74/keeper-agent) — later executed on its own. They
-are different runs and must not be conflated:
+ProofGate replays **one captured reliability incident**. A separate, operator-initiated
+[keeper-agent](https://github.com/Damso74/keeper-agent) run followed the next day. After
+initiation, the agent independently observed, decided, executed and verified. These are different
+runs and must not be conflated:
 
-| | Captured reliability incident (this app's fixture) | Autonomous agent run |
+| | Captured reliability incident (this app's fixture) | Treasury Drip Agent run |
 | --- | --- | --- |
 | Date | 2026-08-04 | 2026-08-05 |
 | Amount | 1 USDC | 0.1 USDC |
 | KeeperHub execution id | `1w6mru2gemgtq7wsruvaj` | `no623hdfsrun2vzv3b25r` |
 | Transaction | [`0x0801289e…`](https://sepolia.etherscan.io/tx/0x0801289edfdcfd919b64b1f7e267d935674d09fa09de7a9670b8aa169bcb605e) | [`0xe7e67b3a…`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062) |
-| Triggered by | a human operator | the agent's own decision rule |
+| Run mode | operator-controlled fixture capture | operator-initiated agent run |
+| Role of the agent | not the submission's autonomy proof | observed, decided, executed and verified after initiation |
 
 Scenarios A and B below both derive from the **2026-08-04** incident.
 
@@ -219,7 +232,8 @@ No API is exposed, no secret is bundled, and no request leaves the browser.
 
 ## Video script
 
-The submission's execution proof is the **autonomous agent run of 2026-08-05** — 0.1 USDC,
+The submission's execution proof is the **operator-initiated Treasury Drip Agent run of
+2026-08-05** — 0.1 USDC,
 execution `no623hdfsrun2vzv3b25r`, transaction
 [`0xe7e67b3a…`](https://sepolia.etherscan.io/tx/0xe7e67b3ab83e1af1f5d130d3c33dbe945cf015da8fb082020b24c253a8eb5062),
 reconciled through the KeeperHub execution status, the audit command and independent RPC
