@@ -34,7 +34,7 @@ npm run agent -- --execute
 Then the execution through KeeperHub, and the transaction on Etherscan.
 
 > "The operator initiated the run. The agent independently observed chain state, decided,
-> executed exactly once through KeeperHub, and verified the outcome."
+> ran one read-only KeeperHub preflight, broadcast once, and verified the outcome."
 
 ### 0:50–1:20 — KeeperHub execution status
 
@@ -55,8 +55,8 @@ npm --silent run audit -- no623hdfsrun2vzv3b25r | jq
 
 Walk through the output: the KeeperHub audit record, the Analytics REST coverage, then the
 RPC evidence read independently — `Transfer` emitted **by the USDC contract** with the Safe in
-the indexed `from` field, `ExecutionFromModuleSuccess`, and `ConsumeAllowance` moving the allowance from 4 to
-3.9 USDC.
+the indexed `from` field, `ExecutionFromModuleSuccess`, and `ConsumeAllowance` reporting
+0.1 USDC consumed with 3.9 USDC remaining.
 
 Verdict: **`MATCH_WITH_PROVIDER_WARNINGS`**. Every authoritative check agrees with the chain.
 Two provider-side warnings remain: `sponsored` contradicts itself between two levels of the
